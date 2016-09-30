@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html lang='en'>
+<head>
+ <title> audio test </title>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ <link rel='stylesheet' type='text/css' href='audtest.css'/>
+</head>
+
+<!-- TO DO
+  o draw zoom box on main waveform display
+  o make zoom box slideable or pan in zoom waveform?
+  o better zoom in/out buttons
+  - vertical scale on FFT
+  x logy option on FFT
+  o zoomable/slidable FFT with better buttons
+-->
+
+<body>
+<h1> SPECTRA FROM THE MICROPHONE </h1>
+
+<div style="visibility:hidden">
+Input play-through monitoring:
+<audio id="playthru" autoplay controls muted="true"></audio>
+</div>
+
+sampled audio:<br/>
+<audio id="sampled" controls type="audio/mpeg"></audio><br/>
+<input id="record" type="button" value="hold to record"/>
+
+<div id="wavecanvas"><canvas id="waveform" height="150" width="1000"
+style="margin-bottom:30px"></canvas></div>
+
+<div id="zoomcanvas"><canvas id="wavezoom" height="150" width="1000"></canvas></div>
+<p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000"/> </p>
+<p> <label for="fftexp">zoom width</label><input id="fftexp" type="number" value="11"/> </p>
+
+<div id="fftcanvas"><canvas id="wavefft" height="150" width="1000"></canvas></div>
+<p> <label for="logtoggle">log scale</label><input id="logtoggle" type="checkbox"/> </p>
+<p> <label for="freqmin">min frequency</label><input id="freqmin" type="number" value="0"/> </p>
+<p> <label for="freqmax">max frequency</label><input id="freqmax" type="number" value="15000"/> </p>
+<hr/>
+
+<div id="logdiv" style="visibility:hidden">
+output log:<br>
+</div>
+
+<!-- end static portion -->
+
+<script src="fft2.js"></script>
+<script type="text/javascript">
+
+CanvasRenderingContext2D.prototype.clear = function() {
+  this.fillStyle = "#fafafa";
+  this.fillRect(0,0,this.canvas.width, this.canvas.height);
+  this.strokeStyle = "#5a5a5a";
+}
+
+var waveCtx = waveform.getContext("2d");
+var zoomCtx = wavezoom.getContext("2d");
+var fftCtx = wavefft.getContext("2d");
+var aCtx = new AudioContext();
+// the scriptnode never actually outputs anything, but the AudioNode graph needs to be connected
+// or no processing happens
+var scriptnode = aCtx.createScriptProcessor(512,1,1);
+var gainnode = aCtx.createGain();
+var recordingState = false;
+var rawdata = new Float32Array(44100*30);
+rawindex = 0;
+
+waveCtx.clear(); zoomCtx.clear(); fftCtx.clear();
+
+navigator.mediaDevices.getUserMedia({ video: false, audio: true })
+  .then(function(s) {
+    playthru.srcObject = s;
+    source = aCtx.createMediaStreamSource(s);
+    source.connect(scriptnode);
+    scriptnode.connect(gainnode);
+    gainnode.gain.value = 0;
+    gainnode.connect(aCtx.destination);
+    mediaRecorder = new MediaRecorder(s);
+    chunks = [];
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+  }
+)
+  .catch(e => log(e.name + ": "+ e.message));
+
+var log = msg => logdiv.innerHTML += msg + "<br/>";
+
+scriptnode.onaudioprocess = function(procEvent) {
+  var inputBuf = procEvent.inputBuffer;
+  var indata = inputBuf.getChannelData(0);
+  if (recordingState) {
+    for (var i=0; i<inputBuf.length; i++) {
+      rawdata[rawindex+i] = indata[i];
+    }
+    rawindex += inputBuf.length;
+  }
+}
+
+document.getElementById("record").onmousedown = function() {
+  log("mousedown on record");
+  rawdata.fill(0);
+  rawindex = 0;
+  mediaRecorder.start();
+  recordingState = true;
+};
+
+document.getElementById("record").onmouseup = function() {
+  log("mouseup on record");
+  mediaRecorder.stop();
+  recordingState = false;
+  // do stuff with rawdata
+  drawWaveform(waveCtx, rawdata.slice(0,rawindex), 0, rawindex);
+  zoomUpdate();
+  // do stuff with mediaRecorder chunks
+  blob = new Blob(chunks, {'type':'audio/mpeg'});
+  chunks = []; // clear chunks for next recording
+  sampled.src = window.URL.createObjectURL(blob);
+  sampled.load();
+};
+
+document.getElementById("zoomstart").onchange = zoomUpdate;
+document.getElementById("fftexp").onchange = zoomUpdate;
+document.getElementById("freqmin").onchange = zoomUpdate;
+document.getElementById("freqmax").onchange = zoomUpdate;
+logtoggle.onchange = zoomUpdate;
+
+function zoomUpdate() {
+  var zoomend = Number(zoomstart.value) + 2**Number(fftexp.value);
+  drawWaveform(zoomCtx, rawdata.slice(zoomstart.value, zoomend), Number(zoomstart.value), zoomend);
+  fftchunk = rawdata.slice(zoomstart.value, zoomend);
+  doPowspec(fftchunk);
+  drawWavespec(fftCtx, fftchunk);
+}
+
+function doPowspec(real) {
+  var imag = real.slice(0);
+  imag.fill(0);
+  fft2(real,imag);
+  for (var i=0; i<real.length; i++) {
+    real[i] = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
+  }
+}
+
+CanvasRenderingContext2D.prototype.labelText = function(text, x, y) {
+  this.font = "8px Arial";
+  this.fillStyle = "black";
+  this.textAlign = "center";
+  this.fillText(text, x, y);
+}
+
+function drawWavespec(cx, d) {
+  var df = aCtx.sampleRate / (2**Number(fftexp.value));
+  var fftmax = Number(freqmax.value) / df;
+  var fftmin = Number(freqmin.value) / df;
+  var plotted = d.slice(fftmin, fftmax);
+  var h = cx.canvas.height;
+  var w = cx.canvas.width;
+  cx.clear();
+  cx.beginPath();
+  var scaley = h * 0.95 / Math.max(...plotted);
+  var scalex = w / plotted.length;
+  if (logtoggle.checked) {
+    var logmax = Math.log10(Math.max(...plotted));
+    var logmin = -3.0;
+    for (var i=0; i<plotted.length; i++) {
+      cx.lineTo(scalex*i, h*(0.95 - 0.95*(Math.log10(plotted[i]) - logmin)/(logmax-logmin)));
+    }
+  } else {
+    for (var i=0; i<plotted.length; i++) {
+      cx.lineTo(scalex*i, h*0.95 - scaley*plotted[i]);
+    }
+  }
+  cx.stroke();
+  for (var i=0.05; i<1; i+=0.1) {
+    var freq = Math.round((fftmin + i*(fftmax-fftmin))*df);
+    cx.labelText(freq + " Hz", w * i, h);
+  }
+}
+
+function drawWaveform(cx, d, a, b) {
+  var h = cx.canvas.height;
+  var w = cx.canvas.width;
+  cx.clear();
+  cx.beginPath();
+  cx.moveTo(0,h/2);
+  var scaley = (h/2) / Math.max(...d.map(Math.abs));
+  var scalex = w / d.length;
+  for (var i=0; i<d.length; i++) {
+    cx.lineTo(scalex*i, h/2-scaley*d[i]);
+  }
+  cx.stroke();
+  for (var i=0.05; i<1; i+=0.1) {
+    var time = Math.round(a + (b-a)*i);
+    cx.labelText(time, w*i, h);
+  }
+}
+
+</script>
+
+</body>
+</html>

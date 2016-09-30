@@ -1,0 +1,12 @@
+hr {
+  height: 30pt;
+  visibility: hidden;
+}
+
+#logdiv {
+  border-style: solid;
+  border-width: thin;
+}
+
+p     { display: table-row;  }
+label { display: table-cell; }
