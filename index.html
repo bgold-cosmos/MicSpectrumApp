@@ -26,6 +26,8 @@ Input play-through monitoring:
 sampled audio:<br/>
 <audio id="sampled" controls type="audio/mpeg"></audio><br/>
 <input id="record" type="button" value="hold to record"/>
+<a id="save" href="#" style="visibility:hidden">save</a>
+
 
 <div id="wavecanvas"><canvas id="waveform" height="150" width="1000"
 style="margin-bottom:30px"></canvas></div>
@@ -44,9 +46,10 @@ style="margin-bottom:30px"></canvas></div>
 output log:<br>
 </div>
 
-<!-- end static portion -->
+<!-- end HTML portion -->
 
 <script src="fft2.js"></script>
+<script src="audiorecorder.js"></script>
 <script type="text/javascript">
 
 CanvasRenderingContext2D.prototype.clear = function() {
@@ -117,6 +120,14 @@ document.getElementById("record").onmouseup = function() {
   chunks = []; // clear chunks for next recording
   sampled.src = window.URL.createObjectURL(blob);
   sampled.load();
+  // make save available
+  var dataview = encodeMonoWAV(rawdata.slice(0,rawindex));
+  var audioBlob = new Blob([dataview], { type: "audio/wav" });
+  var url = (window.URL || window.webkitURL).createObjectURL(audioBlob);
+  var link = document.getElementById("save");
+  link.style="visibility:visible";
+  link.href = url;
+  link.download = 'output.wav';
 };
 
 document.getElementById("zoomstart").onchange = zoomUpdate;
