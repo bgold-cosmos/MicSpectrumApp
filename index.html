@@ -52,12 +52,6 @@ output log:<br>
 <script src="audiorecorder.js"></script>
 <script type="text/javascript">
 
-CanvasRenderingContext2D.prototype.clear = function() {
-  this.fillStyle = "#fafafa";
-  this.fillRect(0,0,this.canvas.width, this.canvas.height);
-  this.strokeStyle = "#5a5a5a";
-}
-
 var waveCtx = waveform.getContext("2d");
 var zoomCtx = wavezoom.getContext("2d");
 var fftCtx = wavefft.getContext("2d");
@@ -70,7 +64,7 @@ var recordingState = false;
 var rawdata = new Float32Array(44100*30);
 rawindex = 0;
 
-waveCtx.clear(); zoomCtx.clear(); fftCtx.clear();
+clearCanvas(waveCtx); clearCanvas(zoomCtx); clearCanvas(fftCtx);
 
 navigator.mediaDevices.getUserMedia({ video: false, audio: true })
   .then(function(s) {
@@ -113,7 +107,6 @@ document.getElementById("record").onmouseup = function() {
   mediaRecorder.stop();
   recordingState = false;
   // do stuff with rawdata
-  drawWaveform(waveCtx, rawdata.slice(0,rawindex), 0, rawindex);
   zoomUpdate();
   // do stuff with mediaRecorder chunks
   blob = new Blob(chunks, {'type':'audio/mpeg'});
@@ -136,12 +129,28 @@ document.getElementById("freqmin").onchange = zoomUpdate;
 document.getElementById("freqmax").onchange = zoomUpdate;
 logtoggle.onchange = zoomUpdate;
 
+waveform.addEventListener("mousedown", function(evt) {
+  var mousePos = getMousePos(waveform, evt);
+  zoomstart.value = Math.round(mousePos.x * rawindex);
+  zoomUpdate();
+}, false)
+
 function zoomUpdate() {
   var zoomend = Number(zoomstart.value) + 2**Number(fftexp.value);
+  drawWaveform(waveCtx, rawdata.slice(0,rawindex), 0, rawindex);
+  drawZoombox(waveCtx, Number(zoomstart.value)/rawindex, zoomend/rawindex);
   drawWaveform(zoomCtx, rawdata.slice(zoomstart.value, zoomend), Number(zoomstart.value), zoomend);
   fftchunk = rawdata.slice(zoomstart.value, zoomend);
   doPowspec(fftchunk);
   drawWavespec(fftCtx, fftchunk);
+}
+
+function getMousePos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left)/canvas.width,
+    y: (evt.clientY - rect.top)/canvas.height
+  };
 }
 
 function doPowspec(real) {
@@ -153,11 +162,17 @@ function doPowspec(real) {
   }
 }
 
-CanvasRenderingContext2D.prototype.labelText = function(text, x, y) {
-  this.font = "8px Arial";
-  this.fillStyle = "black";
-  this.textAlign = "center";
-  this.fillText(text, x, y);
+function clearCanvas(cx) {
+  cx.fillStyle = "#fafafa";
+  cx.fillRect(0,0,cx.canvas.width, cx.canvas.height);
+  cx.strokeStyle = "#5a5a5a";
+}
+
+function labelText(cx, text, x, y) {
+  cx.font = "8px Arial";
+  cx.fillStyle = "black";
+  cx.textAlign = "center";
+  cx.fillText(text, x, y);
 }
 
 function drawWavespec(cx, d) {
@@ -167,7 +182,7 @@ function drawWavespec(cx, d) {
   var plotted = d.slice(fftmin, fftmax);
   var h = cx.canvas.height;
   var w = cx.canvas.width;
-  cx.clear();
+  clearCanvas(cx);
   cx.beginPath();
   var scaley = h * 0.95 / Math.max(...plotted);
   var scalex = w / plotted.length;
@@ -183,16 +198,27 @@ function drawWavespec(cx, d) {
     }
   }
   cx.stroke();
+  cx.closePath();
   for (var i=0.05; i<1; i+=0.1) {
     var freq = Math.round((fftmin + i*(fftmax-fftmin))*df);
-    cx.labelText(freq + " Hz", w * i, h);
+    labelText(cx, freq + " Hz", w * i, h);
   }
+}
+
+function drawZoombox(cx, a, b) {
+  var h = cx.canvas.height;
+  var w = cx.canvas.width;
+  cx.beginPath();
+  cx.strokeStyle = "#4285f4";
+  cx.rect(a*w, 10, (b-a)*w, h-20)
+  cx.rect(a*w-2, 10, (b-a)*w+2, h-20)
+  cx.stroke();
 }
 
 function drawWaveform(cx, d, a, b) {
   var h = cx.canvas.height;
   var w = cx.canvas.width;
-  cx.clear();
+  clearCanvas(cx);
   cx.beginPath();
   cx.moveTo(0,h/2);
   var scaley = (h/2) / Math.max(...d.map(Math.abs));
@@ -201,9 +227,10 @@ function drawWaveform(cx, d, a, b) {
     cx.lineTo(scalex*i, h/2-scaley*d[i]);
   }
   cx.stroke();
+  cx.closePath();
   for (var i=0.05; i<1; i+=0.1) {
     var time = Math.round(a + (b-a)*i);
-    cx.labelText(time, w*i, h);
+    labelText(cx, time, w*i, h);
   }
 }
 
