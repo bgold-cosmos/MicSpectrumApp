@@ -7,12 +7,12 @@
 </head>
 
 <!-- TO DO
-  o draw zoom box on main waveform display
-  o make zoom box slideable or pan in zoom waveform?
-  o better zoom in/out buttons
+  x draw zoom box on main waveform display
+  x make zoom box slideable or pan in zoom waveform?
+  x better zoom in/out buttons
   - vertical scale on FFT
   x logy option on FFT
-  o zoomable/slidable FFT with better buttons
+  ? zoomable/slidable FFT with better buttons
 -->
 
 <body>
@@ -29,17 +29,22 @@ sampled audio:<br/>
 <a id="save" href="#" style="visibility:hidden">save</a>
 
 
-<div id="wavecanvas"><canvas id="waveform" height="150" width="1000"
-style="margin-bottom:30px"></canvas></div>
+<div id="wavecanvas"><canvas id="waveform" height="150" width="1000"></canvas></div>
+<div>
+  <input id="zoomin" type="button" value="zoom in"/>
+  <input id="zoomout" type="button" value="zoom out"/>
+</div>
 
 <div id="zoomcanvas"><canvas id="wavezoom" height="150" width="1000"></canvas></div>
-<p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000"/> </p>
+<p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
 <p> <label for="fftexp">zoom width</label><input id="fftexp" type="number" value="11"/> </p>
 
 <div id="fftcanvas"><canvas id="wavefft" height="150" width="1000"></canvas></div>
 <p> <label for="logtoggle">log scale</label><input id="logtoggle" type="checkbox"/> </p>
-<p> <label for="freqmin">min frequency</label><input id="freqmin" type="number" value="0"/> </p>
-<p> <label for="freqmax">max frequency</label><input id="freqmax" type="number" value="15000"/> </p>
+<p> <label for="freqmin">min frequency</label><input id="freqmin" type="number" value="0" step="200"/> </p>
+<p> <label for="freqmax">max frequency</label><input id="freqmax" type="number" value="15000" step="200"/> </p>
+<p> <label for="guidetoggle">harmonic guides</label><input id="guidetoggle" type="checkbox"/> </p>
+<p> <label for="guidefreq">guide frequency</label><input id="guidefreq" type="number" value="512" step="100"/></p>
 <hr/>
 
 <div id="logdiv" style="visibility:hidden">
@@ -51,6 +56,18 @@ output log:<br>
 <script src="fft2.js"></script>
 <script src="audiorecorder.js"></script>
 <script type="text/javascript">
+
+CanvasRenderingContext2D.prototype.clear = function() {
+  this.fillStyle = "#fafafa";
+  this.fillRect(0,0,this.canvas.width, this.canvas.height);
+  this.strokeStyle = "#5a5a5a";
+}
+CanvasRenderingContext2D.prototype.labelText = function(text, x, y) {
+  this.font = "8px Arial";
+  this.fillStyle = "black";
+  this.textAlign = "center";
+  this.fillText(text, x, y);
+}
 
 var waveCtx = waveform.getContext("2d");
 var zoomCtx = wavezoom.getContext("2d");
@@ -64,7 +81,7 @@ var recordingState = false;
 var rawdata = new Float32Array(44100*30);
 rawindex = 0;
 
-clearCanvas(waveCtx); clearCanvas(zoomCtx); clearCanvas(fftCtx);
+waveCtx.clear(); zoomCtx.clear(); fftCtx.clear();
 
 navigator.mediaDevices.getUserMedia({ video: false, audio: true })
   .then(function(s) {
@@ -123,11 +140,15 @@ document.getElementById("record").onmouseup = function() {
   link.download = 'output.wav';
 };
 
+document.getElementById("zoomin").onclick = () => {fftexp.value -= 1; zoomUpdate()};
+document.getElementById("zoomout").onclick = () => {fftexp.value -= -1; zoomUpdate()};
 document.getElementById("zoomstart").onchange = zoomUpdate;
 document.getElementById("fftexp").onchange = zoomUpdate;
 document.getElementById("freqmin").onchange = zoomUpdate;
 document.getElementById("freqmax").onchange = zoomUpdate;
-logtoggle.onchange = zoomUpdate;
+document.getElementById("logtoggle").onchange = zoomUpdate;
+document.getElementById("guidetoggle").onchange = zoomUpdate;
+document.getElementById("guidefreq").onchange = zoomUpdate;
 
 waveform.addEventListener("mousedown", function(evt) {
   var mousePos = getMousePos(waveform, evt);
@@ -136,9 +157,9 @@ waveform.addEventListener("mousedown", function(evt) {
 }, false)
 
 function zoomUpdate() {
-  var zoomend = Number(zoomstart.value) + 2**Number(fftexp.value);
+  var zoomend = Number(zoomstart.value) + 2**fftexp.value;
   drawWaveform(waveCtx, rawdata.slice(0,rawindex), 0, rawindex);
-  drawZoombox(waveCtx, Number(zoomstart.value)/rawindex, zoomend/rawindex);
+  drawZoombox(waveCtx, zoomstart.value/rawindex, zoomend/rawindex);
   drawWaveform(zoomCtx, rawdata.slice(zoomstart.value, zoomend), Number(zoomstart.value), zoomend);
   fftchunk = rawdata.slice(zoomstart.value, zoomend);
   doPowspec(fftchunk);
@@ -162,27 +183,14 @@ function doPowspec(real) {
   }
 }
 
-function clearCanvas(cx) {
-  cx.fillStyle = "#fafafa";
-  cx.fillRect(0,0,cx.canvas.width, cx.canvas.height);
-  cx.strokeStyle = "#5a5a5a";
-}
-
-function labelText(cx, text, x, y) {
-  cx.font = "8px Arial";
-  cx.fillStyle = "black";
-  cx.textAlign = "center";
-  cx.fillText(text, x, y);
-}
-
 function drawWavespec(cx, d) {
-  var df = aCtx.sampleRate / (2**Number(fftexp.value));
-  var fftmax = Number(freqmax.value) / df;
-  var fftmin = Number(freqmin.value) / df;
+  var df = aCtx.sampleRate / (2**fftexp.value);
+  var fftmax = freqmax.value / df;
+  var fftmin = freqmin.value / df;
   var plotted = d.slice(fftmin, fftmax);
   var h = cx.canvas.height;
   var w = cx.canvas.width;
-  clearCanvas(cx);
+  cx.clear();
   cx.beginPath();
   var scaley = h * 0.95 / Math.max(...plotted);
   var scalex = w / plotted.length;
@@ -199,9 +207,22 @@ function drawWavespec(cx, d) {
   }
   cx.stroke();
   cx.closePath();
+  if (guidetoggle.checked) {
+    var freq, x;
+    cx.beginPath();
+    for (var i=1; i<64; i++) {
+      freq = i*guidefreq.value;
+      x = (freq - freqmin.value) / (freqmax.value - freqmin.value);
+      cx.moveTo(x*w, h/2 - h*0.03*(2 + 3*(i == 1) + (i%4 == 0)));
+      cx.lineTo(x*w, h/2 + h*0.03*(2 + 3*(i == 1) + (i%4 == 0)));
+    }
+    cx.strokeStyle = "#f00";
+    cx.stroke();
+    cx.closePath();
+  }
   for (var i=0.05; i<1; i+=0.1) {
     var freq = Math.round((fftmin + i*(fftmax-fftmin))*df);
-    labelText(cx, freq + " Hz", w * i, h);
+    cx.labelText(freq + " Hz", w * i, h);
   }
 }
 
@@ -218,10 +239,10 @@ function drawZoombox(cx, a, b) {
 function drawWaveform(cx, d, a, b) {
   var h = cx.canvas.height;
   var w = cx.canvas.width;
-  clearCanvas(cx);
+  cx.clear();
   cx.beginPath();
   cx.moveTo(0,h/2);
-  var scaley = (h/2) / Math.max(...d.map(Math.abs));
+  var scaley = (h/2) / absmax(d);
   var scalex = w / d.length;
   for (var i=0; i<d.length; i++) {
     cx.lineTo(scalex*i, h/2-scaley*d[i]);
@@ -230,8 +251,17 @@ function drawWaveform(cx, d, a, b) {
   cx.closePath();
   for (var i=0.05; i<1; i+=0.1) {
     var time = Math.round(a + (b-a)*i);
-    labelText(cx, time, w*i, h);
+    cx.labelText(time, w*i, h);
   }
+}
+
+// this is to get around "call stack size exceeded" errors from the simpler ... notation
+function absmax(d) {
+  var max = 0;
+  for (var i=0; i<d.length; i++) {
+    if (Math.abs(d[i]) > max) max = Math.abs(d[i]);
+  }
+  return max;
 }
 
 </script>
