@@ -8,10 +8,17 @@ hr {
   border-width: thin;
 }
 
+body  { background-color: #eaeaf0; }
 p     { display: table-row;  }
 label { display: table-cell; }
 p,input,button,h1    {
   font-family: Tahoma, Geneva, sans-serif;
+  color: #777;
+  background-color: #fafafa;
+}
+h1 {
+  color:#ffffff;
+  background-color:#e0e0e8;
 }
 
 @media all and (max-width: 1000px) and (min-width:801px){
