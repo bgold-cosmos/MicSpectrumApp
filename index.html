@@ -29,17 +29,18 @@ Input play-through monitoring:
 <a id="save" href="#" style="visibility:hidden">save</a>
 
 
-<div id="wavecanvas"><canvas id="waveform" height="150" width="1000"></canvas></div>
+<div id="wavecanvas"><canvas id="waveform" height="100" width="1000"></canvas></div>
 <div>
   <input id="zoomin" type="button" value="zoom in"/>
   <input id="zoomout" type="button" value="zoom out"/>
 </div>
 
-<div id="zoomcanvas"><canvas id="wavezoom" height="150" width="1000"></canvas></div>
+<div id="zoomcanvas"><canvas id="wavezoom" height="100" width="1000"></canvas></div>
 <p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
 <p> <label for="fftexp">zoom width</label><input id="fftexp" type="number" value="11"/> </p>
-
-<div id="fftcanvas"><canvas id="wavefft" height="150" width="1000"></canvas></div>
+<br/>
+<p> Frequency spectrum</p>
+<div id="fftcanvas"><canvas id="wavefft" height="100" width="1000"></canvas></div>
 <p> <label for="logtoggle">log scale</label><input id="logtoggle" type="checkbox"/> </p>
 <p> <label for="freqmin">min frequency</label><input id="freqmin" type="number" value="0" step="200"/> </p>
 <p> <label for="freqmax">max frequency</label><input id="freqmax" type="number" value="15000" step="200"/> </p>
@@ -51,7 +52,11 @@ Input play-through monitoring:
 output log:<br>
 </div>
 
+<!--  -->
+<!--  -->
 <!-- end HTML portion -->
+<!--  -->
+<!--  -->
 
 <script src="fft2.js"></script>
 <script src="audiorecorder.js"></script>
