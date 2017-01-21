@@ -10,3 +10,38 @@ hr {
 
 p     { display: table-row;  }
 label { display: table-cell; }
+p,input,button,h1    {
+  font-family: Tahoma, Geneva, sans-serif;
+}
+
+@media all and (max-width: 1000px) and (min-width:801px){
+  input {
+    -ms-transform: scale(1.5); /* IE */
+    -moz-transform: scale(1.5); /* FF */
+    -webkit-transform: scale(1.5); /* Safari and Chrome */
+    -o-transform: scale(1.5); /* Opera */
+    /* padding: 5px; */
+    margin: 7px;
+    margin-left: 75px;
+  }
+
+  p {
+    font-size: 150%;
+  }
+}
+
+@media all and (max-width: 800px) {
+  input {
+    -ms-transform: scale(2); /* IE */
+    -moz-transform: scale(2); /* FF */
+    -webkit-transform: scale(2); /* Safari and Chrome */
+    -o-transform: scale(2); /* Opera */
+    /* padding: 5px; */
+    margin: 10px;
+    margin-left: 100px;
+  }
+
+  p {
+    font-size: 200%;
+  }
+}
