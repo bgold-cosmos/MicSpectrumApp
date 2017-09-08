@@ -131,14 +131,16 @@ document.getElementById("record").onmouseup = function() {
   // do stuff with rawdata
   zoomUpdate();
   // do stuff with mediaRecorder chunks
-  blob = new Blob(chunks, {'type':'audio/mpeg'});
+  //blob = new Blob(chunks, {'type':'audio/mpeg'});
   chunks = []; // clear chunks for next recording
-  sampled.src = window.URL.createObjectURL(blob);
-  sampled.load();
+  //sampled.src = window.URL.createObjectURL(blob);
+  //sampled.load();
   // make save available
   var dataview = encodeMonoWAV(rawdata.slice(0,rawindex));
   var audioBlob = new Blob([dataview], { type: "audio/wav" });
   var url = (window.URL || window.webkitURL).createObjectURL(audioBlob);
+  sampled.src = url;
+  sampled.load();
   var link = document.getElementById("save");
   link.style="visibility:visible";
   link.href = url;
