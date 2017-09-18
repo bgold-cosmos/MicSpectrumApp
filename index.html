@@ -35,9 +35,11 @@ Input play-through monitoring:
   <input id="zoomout" type="button" value="zoom out"/>
 </div>
 
-<p>sampled audio snippet:</p>
-<audio id="snippet" controls type="audio/mpeg"></audio><br/>
+<br/>
 
+<p>selected audio snippet:</p>
+<audio id="snippet" controls type="audio/mpeg"></audio><br/>
+<p> <label for="reverseplay">reverse playback</label><input id="reverseplay" type="checkbox"/> </p>
 
 <div id="zoomcanvas"><canvas id="wavezoom" height="100" width="1000"></canvas></div>
 <p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
@@ -161,6 +163,7 @@ document.getElementById("freqmax").onchange = zoomUpdate;
 document.getElementById("logtoggle").onchange = zoomUpdate;
 document.getElementById("guidetoggle").onchange = zoomUpdate;
 document.getElementById("guidefreq").onchange = zoomUpdate;
+document.getElementById("reverseplay").onchange = zoomUpdate;
 
 waveform.addEventListener("mousedown", function(evt) {
   var mousePos = getMousePos(waveform, evt);
@@ -176,8 +179,11 @@ function zoomUpdate() {
   fftchunk = rawdata.slice(zoomstart.value, zoomend);
   doPowspec(fftchunk);
   drawWavespec(fftCtx, fftchunk);
-  var blob2 = new Blob([encodeMonoWAV(rawdata.slice(zoomstart.value,zoomend))], 
-                {type:"audio/wav"});
+  var slicedData = rawdata.slice(zoomstart.value, zoomend);
+  if (reverseplay.checked) {
+    slicedData.reverse();
+  }
+  var blob2 = new Blob([encodeMonoWAV(slicedData)], {type:"audio/wav"});
   snippet.src = (window.URL || window.webkitURL).createObjectURL(blob2);
   snippet.load();
 }
