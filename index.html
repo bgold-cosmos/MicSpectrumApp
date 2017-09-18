@@ -35,6 +35,10 @@ Input play-through monitoring:
   <input id="zoomout" type="button" value="zoom out"/>
 </div>
 
+<p>sampled audio snippet:</p>
+<audio id="snippet" controls type="audio/mpeg"></audio><br/>
+
+
 <div id="zoomcanvas"><canvas id="wavezoom" height="100" width="1000"></canvas></div>
 <p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
 <p> <label for="fftexp">zoom width</label><input id="fftexp" type="number" value="11"/> </p>
@@ -42,10 +46,10 @@ Input play-through monitoring:
 <p> Frequency spectrum</p>
 <div id="fftcanvas"><canvas id="wavefft" height="100" width="1000"></canvas></div>
 <p> <label for="logtoggle">log scale</label><input id="logtoggle" type="checkbox"/> </p>
-<p> <label for="freqmin">min frequency</label><input id="freqmin" type="number" value="0" step="200"/> </p>
-<p> <label for="freqmax">max frequency</label><input id="freqmax" type="number" value="15000" step="200"/> </p>
+<p> <label for="freqmin">min frequency</label><input id="freqmin" type="number" value="0" step="100"/> </p>
+<p> <label for="freqmax">max frequency</label><input id="freqmax" type="number" value="4000" step="100"/> </p>
 <p> <label for="guidetoggle">harmonic guides</label><input id="guidetoggle" type="checkbox"/> </p>
-<p> <label for="guidefreq">guide frequency</label><input id="guidefreq" type="number" value="512" step="100"/></p>
+<p> <label for="guidefreq">guide frequency</label><input id="guidefreq" type="number" value="440" step="20"/></p>
 <hr/>
 
 <div id="logdiv" style="visibility:hidden">
@@ -129,7 +133,7 @@ document.getElementById("record").onmouseup = function() {
   mediaRecorder.stop();
   recordingState = false;
   // do stuff with rawdata
-  zoomUpdate();
+  //zoomUpdate();
   // do stuff with mediaRecorder chunks
   //blob = new Blob(chunks, {'type':'audio/mpeg'});
   chunks = []; // clear chunks for next recording
@@ -145,6 +149,7 @@ document.getElementById("record").onmouseup = function() {
   link.style="visibility:visible";
   link.href = url;
   link.download = 'output.wav';
+  zoomUpdate();
 };
 
 document.getElementById("zoomin").onclick = () => {fftexp.value -= 1; zoomUpdate()};
@@ -171,6 +176,10 @@ function zoomUpdate() {
   fftchunk = rawdata.slice(zoomstart.value, zoomend);
   doPowspec(fftchunk);
   drawWavespec(fftCtx, fftchunk);
+  var blob2 = new Blob([encodeMonoWAV(rawdata.slice(zoomstart.value,zoomend))], 
+                {type:"audio/wav"});
+  snippet.src = (window.URL || window.webkitURL).createObjectURL(blob2);
+  snippet.load();
 }
 
 function getMousePos(canvas, evt) {
