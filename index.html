@@ -13,6 +13,7 @@
   - vertical scale on FFT
   x logy option on FFT
   ? zoomable/slidable FFT with better buttons
+  - gapless looping would be nice
 -->
 
 <body>
@@ -25,7 +26,7 @@ Input play-through monitoring:
 
 <p>sampled audio:</p>
 <audio id="sampled" controls type="audio/mpeg"></audio><br/>
-<input id="record" type="button" value="hold to record"/>
+<input id="record" style="color:red;" type="button" value="hold to record"/>
 <a id="save" href="#" style="visibility:hidden">save</a>
 
 
@@ -39,7 +40,10 @@ Input play-through monitoring:
 
 <p>selected audio snippet:</p>
 <audio id="snippet" controls type="audio/mpeg"></audio><br/>
-<p> <label for="reverseplay">reverse playback</label><input id="reverseplay" type="checkbox"/> </p>
+<p> 
+<label for="sniploop">loop audio</label><input id="sniploop" type="checkbox"/> 
+<label for="reverseplay">reverse playback</label><input id="reverseplay" type="checkbox"/> 
+</p>
 
 <div id="zoomcanvas"><canvas id="wavezoom" height="100" width="1000"></canvas></div>
 <p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
@@ -156,6 +160,7 @@ document.getElementById("record").onmouseup = function() {
 
 document.getElementById("zoomin").onclick = () => {fftexp.value -= 1; zoomUpdate()};
 document.getElementById("zoomout").onclick = () => {fftexp.value -= -1; zoomUpdate()};
+document.getElementById("sniploop").onclick = () => { snippet.loop = !snippet.loop }
 document.getElementById("zoomstart").onchange = zoomUpdate;
 document.getElementById("fftexp").onchange = zoomUpdate;
 document.getElementById("freqmin").onchange = zoomUpdate;
