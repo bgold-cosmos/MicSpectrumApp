@@ -135,6 +135,10 @@ document.getElementById("record").onmousedown = function() {
 };
 
 document.getElementById("record").onmouseup = function() {
+  setTimeout(stopRecording, 100);
+}
+
+function stopRecording() {
   log("mouseup on record");
   mediaRecorder.stop();
   recordingState = false;
