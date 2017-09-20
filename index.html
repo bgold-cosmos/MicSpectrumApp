@@ -40,10 +40,8 @@ Input play-through monitoring:
 
 <p>selected audio snippet:</p>
 <audio id="snippet" controls type="audio/mpeg"></audio><br/>
-<p> 
-<label for="sniploop">loop audio</label><input id="sniploop" type="checkbox"/> 
-<label for="reverseplay">reverse playback</label><input id="reverseplay" type="checkbox"/> 
-</p>
+<p><label for="sniploop">loop audio</label><input id="sniploop" type="checkbox"/></p>
+<p><label for="reverseplay">reverse playback</label><input id="reverseplay" type="checkbox"/></p>
 
 <div id="zoomcanvas"><canvas id="wavezoom" height="100" width="1000"></canvas></div>
 <p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
@@ -78,7 +76,7 @@ CanvasRenderingContext2D.prototype.clear = function() {
   this.strokeStyle = "#5a5a5a";
 }
 CanvasRenderingContext2D.prototype.labelText = function(text, x, y) {
-  this.font = "8px Arial";
+  this.font = "10px Arial";
   this.fillStyle = "black";
   this.textAlign = "center";
   this.fillText(text, x, y);
@@ -179,6 +177,12 @@ waveform.addEventListener("mousedown", function(evt) {
   zoomstart.value = Math.round(mousePos.x * rawindex);
   zoomUpdate();
 }, false)
+
+wavefft.addEventListener("mousedown", function(evt) {
+  var mousePos = getMousePos(wavefft, evt);
+  guidefreq.value = Math.round(mousePos.x * (freqmax.value - freqmin.value) + Number(freqmin.value));
+  zoomUpdate();
+})
 
 function zoomUpdate() {
   var zoomend = Number(zoomstart.value) + 2**fftexp.value;
@@ -294,6 +298,8 @@ function absmax(d) {
   }
   return max;
 }
+
+zoomUpdate();
 
 </script>
 
