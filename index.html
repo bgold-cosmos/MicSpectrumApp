@@ -44,8 +44,8 @@ Input play-through monitoring:
 <p><label for="reverseplay">reverse playback</label><input id="reverseplay" type="checkbox"/></p>
 
 <div id="zoomcanvas"><canvas id="wavezoom" height="100" width="1000"></canvas></div>
-<p> <label for="zoomstart">zoom start</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
-<p> <label for="fftexp">zoom width</label><input id="fftexp" type="number" value="11"/> </p>
+<p> <label for="zoomstart">zoom starting sample</label><input id="zoomstart" type="number" value="3000" step="1000"/> </p>
+<p> <label for="fftexp">zoom width index</label><input id="fftexp" type="number" value="11"/> </p>
 <br/>
 <p> Frequency spectrum</p>
 <div id="fftcanvas"><canvas id="wavefft" height="100" width="1000"></canvas></div>
@@ -86,6 +86,7 @@ var waveCtx = waveform.getContext("2d");
 var zoomCtx = wavezoom.getContext("2d");
 var fftCtx = wavefft.getContext("2d");
 var aCtx = new AudioContext();
+var sampleRate = aCtx.sampleRate;
 // the scriptnode never actually outputs anything, but the AudioNode graph needs to be connected
 // or no processing happens
 var scriptnode = aCtx.createScriptProcessor(512,1,1);
@@ -219,7 +220,7 @@ function doPowspec(real) {
 }
 
 function drawWavespec(cx, d) {
-  var df = aCtx.sampleRate / (2**fftexp.value);
+  var df = sampleRate / (2**fftexp.value);
   var fftmax = freqmax.value / df;
   var fftmin = freqmin.value / df;
   var plotted = d.slice(fftmin, fftmax);
@@ -285,7 +286,7 @@ function drawWaveform(cx, d, a, b) {
   cx.stroke();
   cx.closePath();
   for (var i=0.05; i<1; i+=0.1) {
-    var time = Math.round(a + (b-a)*i);
+    var time = ((a + (b-a)*i) / sampleRate).toFixed(4);
     cx.labelText(time, w*i, h);
   }
 }
