@@ -127,6 +127,7 @@ scriptnode.onaudioprocess = function(procEvent) {
 
 document.getElementById("record").onmousedown = function() {
   log("mousedown on record");
+  aCtx.resume().then( () => { console.log('playback resumed');});
   rawdata.fill(0);
   rawindex = 0;
   mediaRecorder.start();
