@@ -14,13 +14,29 @@ body  {
 }
 p     { display: table-row;  }
 label { display: table-cell; }
-p,input,button,h1    {
+a.btn, p, input, button, h1    {
   font-family: Tahoma, Geneva, sans-serif;
   color: #777;
   background-color: #fafafa;
+  margin: 3px;
 }
+a.btn, input, button {
+  border: thin solid black;
+  border-color: #ccc;
+  margin-left: 30px;
+}
+a.btn, input.btn {
+  font-size: 12px;
+  border-color: gray;
+  margin: 0px 0px 3px 3px;
+  padding: 3px 6px 3px 6px;
+}
+input.btn:hover:active {
+  background: red;
+}
+
 h1 {
-  color:#ffffff;
+  color:white;
   background-color:#e0e0e8;
 }
 
