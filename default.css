@@ -12,6 +12,16 @@ body  {
   background-color: #eaeaf0;
   background: -webkit-linear-gradient(top, #eaeaf0, #aac);
 }
+
+#container {
+  margin-left:10vw;
+}
+
+canvas {
+  height: 100px;
+  width: 1000px;
+}
+
 p     { display: table-row;  }
 label { display: table-cell; }
 a.btn, p, input, button, h1    {
@@ -30,6 +40,7 @@ a.btn, input.btn {
   border-color: gray;
   margin: 0px 0px 3px 3px;
   padding: 3px 6px 3px 6px;
+  transition: background 0.2s linear;
 }
 input.btn:hover:active {
   background: red;
@@ -38,6 +49,7 @@ input.btn:hover:active {
 h1 {
   color:white;
   background-color:#e0e0e8;
+  margin-right:10vw;
 }
 
 @media all and (max-width: 1000px) and (min-width:801px){
