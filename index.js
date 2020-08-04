@@ -13,6 +13,7 @@ CanvasRenderingContext2D.prototype.labelText = function(text, x, y, c = "black")
 var waveCtx = waveform.getContext("2d");
 var zoomCtx = wavezoom.getContext("2d");
 var fftCtx = wavefft.getContext("2d");
+var AudioContext = window.AudioContext || window.webkitAudioContext;
 var aCtx = new AudioContext();
 var sampleRate = aCtx.sampleRate;
 // the scriptnode never actually outputs anything, but the AudioNode graph needs to be connected
