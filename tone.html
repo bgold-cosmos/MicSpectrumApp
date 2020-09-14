@@ -1,4 +1,9 @@
 <html style="margin: 5%; font-size: 200%">
+<style>
+.slider {
+ width: 80%;
+}
+</style>
 <head>
   <meta charset="UTF-8">
 </head>
@@ -10,7 +15,7 @@ https://stackoverflow.com/questions/6343450/generating-sound-on-the-fly-with-jav
 
 
 frequency
-<input type="range" id="fIn" min="1.30" max="4.0" step="0.1" oninput="show()" />
+<input type="range" class="slider" id="fIn" min="1.30" max="4.3" step="0.01" oninput="show()" />
 <span id="fOut"></span><br>
 type
 <input type="range" id="tIn" min="0" max="3" oninput="show()" />
