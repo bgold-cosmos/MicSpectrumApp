@@ -26,6 +26,7 @@ function show() {
 function beep() {
   var oscillator = audioCtx.createOscillator();
   var gainNode = audioCtx.createGain();
+  var playButton = document.getElementById("play")
 
   oscillator.connect(gainNode);
   gainNode.connect(audioCtx.destination);
@@ -35,10 +36,12 @@ function beep() {
   oscillator.type = type;
 
   oscillator.start();
+  playButton.style.background = "red";
 
   setTimeout(
     function() {
       oscillator.stop();
+      playButton.style.background = "#0F0";
     },
     duration
   );
